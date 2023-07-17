@@ -17,6 +17,10 @@ The V3O.JS Toolchain consists of three main parts:
 - [V3O to OBJ Web](https://htmlpreview.github.io/?https://github.com/annabelsandford/V3O.JS/blob/main/v3o2obj.html).
 - [OBJ to V3O Web](https://htmlpreview.github.io/?https://github.com/annabelsandford/V3O.JS/blob/main/obj2v3o.html).
 
+## Issues
+
+The conversion process from OBJ to V3O currently has a known issue where UV coordinates may be incorrectly converted. This problem will require further investigation and attention in the future.
+
 ## About V3O.JS
 
 V3O.JS aims to provide a set of tools allowing for viewing and editing V3O Model Files (Emergency 3, Emergency 4, 911 First Responders, etc.) directly on the web. Currently, achieving this goal requires the use of external tools, with the Blender Scripts by MedicalByte being the most prominent among them.
