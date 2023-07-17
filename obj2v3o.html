@@ -1,0 +1,178 @@
+<!--
+    V3O.JS Toolchain
+    OBJ to V3O Converter (obj2v3o.html)
+
+    This tool converts an OBJ file to a V3O file.
+    The conversion process is based on the OBJ->V3O conversion algorithm learned from MedicalByte's Blender Scripts.
+
+    Written by Sabrina Annabel Sandford, 17/07/2023
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>V3O.JS: OBJ to V3O Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 50px auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .converter {
+      margin-top: 20px;
+    }
+
+    .converter input[type="file"] {
+      display: none;
+    }
+
+    .converter label {
+      display: block;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .converter button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #FFF;
+      border: none;
+      cursor: pointer;
+    }
+
+    #convertButton {
+      display: none;
+    }
+
+    #convertButton.visible {
+      display: block;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      font-family: monospace;
+      white-space: pre;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>V3O.JS: OBJ to V3O Converter</h1>
+    <div class="converter">
+      <input type="file" id="objFile" accept=".obj">
+      <button id="selectButton">Select OBJ</button><hr>
+      <button id="convertButton" class="visible">Convert</button>
+    </div>
+    <div id="result"></div>
+  </div>
+  <script>
+    function convertObjToV3o(objData) {
+      const lines = objData.trim().split('\n');
+      const vertices = [];
+      const normals = [];
+      const uvs = [];
+      const faces = [];
+
+      lines.forEach(line => {
+        const parts = line.split(/\s+/);
+
+        if (parts[0] === 'v') {
+          const x = parseFloat(parts[1]);
+          const y = parseFloat(parts[2]);
+          const z = parseFloat(parts[3]);
+          vertices.push(`D, ${y}, ${-x}, ${z}, 0, 0, 0, 0, 0, 0, 0, 0, 0`);
+        } else if (parts[0] === 'vn') {
+          const nx = parseFloat(parts[1]);
+          const ny = parseFloat(parts[2]);
+          const nz = parseFloat(parts[3]);
+          normals.push(`D, ${ny}, ${-nx}, ${nz}, ${nx * 256}, ${ny * 256}, ${nz * 256}, 0, 0, 0, 0, 0, 0`);
+        } else if (parts[0] === 'vt') {
+          const u = parseFloat(parts[1]);
+          const v = parseFloat(parts[2]);
+          uvs.push(`D, 0, 0, 0, 0, 0, 0, ${u * 1024}, ${(1 - v) * 1024}`);
+        } else if (parts[0] === 'f') {
+          const faceIndices = parts.slice(1);
+          const faceData = [];
+
+          faceIndices.forEach(index => {
+            const [vIndex, tIndex, nIndex] = index.split('/').map(Number);
+            faceData.push({ vIndex, tIndex, nIndex });
+          });
+
+          const v1 = faceData[0].vIndex;
+          const v2 = faceData[1].vIndex;
+          const v3 = faceData[2].vIndex;
+          const t1 = faceData[0].tIndex;
+
+          faces.push(`P, 3, ${v1}, ${v2}, ${v3}, 0, 0, 0, 0, ${t1}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0`);
+        }
+      });
+
+      const v3oData = [...vertices, ...normals, ...uvs, ...faces].join('\n');
+      return v3oData;
+    }
+
+    function showConvertButton() {
+      const selectButton = document.getElementById('selectButton');
+      selectButton.style.display = 'none';
+
+      const convertButton = document.getElementById('convertButton');
+      convertButton.classList.add('visible');
+    }
+
+    document.getElementById('selectButton').addEventListener('click', function() {
+      const fileInput = document.getElementById('objFile');
+      fileInput.click();
+    });
+
+    document.getElementById('objFile').addEventListener('change', function() {
+      const fileInput = document.getElementById('objFile');
+      const file = fileInput.files[0];
+
+      if (file) {
+        showConvertButton();
+      }
+    });
+
+    document.getElementById('convertButton').addEventListener('click', function() {
+      const fileInput = document.getElementById('objFile');
+      const file = fileInput.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const objData = e.target.result;
+          const v3oData = convertObjToV3o(objData);
+
+          const blob = new Blob([v3oData], {type: 'text/plain'});
+
+          const url = URL.createObjectURL(blob);
+
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'converted.v3o';
+          link.click();
+
+          URL.revokeObjectURL(url);
+
+          const resultDiv = document.getElementById('result');
+          resultDiv.textContent = v3oData;
+        };
+
+        reader.readAsText(file);
+      }
+    });
+  </script>
+</body>
+</html>
