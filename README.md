@@ -15,6 +15,7 @@ The V3O.JS Toolchain consists of three main parts:
 ## Live Versions (Web)
 
 - [V3O to OBJ Web](https://htmlpreview.github.io/?https://github.com/annabelsandford/V3O.JS/blob/main/v3o2obj.html).
+- [OBJ to V3O Web](https://htmlpreview.github.io/?https://github.com/annabelsandford/V3O.JS/blob/main/obj2v3o.html).
 
 ## About V3O.JS
 
