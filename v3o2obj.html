@@ -1,0 +1,170 @@
+<!--
+    V3O.JS Toolchain
+    V3O to OBJ Converter (v3o2obj.html)
+
+    This tool converts a V3O file to an OBJ file.
+    The conversion process is based on the V3O->OBJ conversion algorithm learned from MedicalByte's Blender Scripts.
+
+    Written by Sabrina Annabel Sandford, 17/07/2023
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>V3O.JS: V3O->OBJ</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 50px auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .converter {
+      margin-top: 20px;
+    }
+
+    .converter input[type="file"] {
+      display: none;
+    }
+
+    .converter label {
+      display: block;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .converter button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #FFF;
+      border: none;
+      cursor: pointer;
+    }
+
+    #convertButton {
+      display: none;
+    }
+
+    #convertButton.visible {
+      display: block;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      font-family: monospace;
+      white-space: pre;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>V3O.JS: V3O to OBJ Converter</h1>
+    <div class="converter">
+      <input type="file" id="v3oFile" accept=".v3o">
+      <button id="selectButton">Select v3o</button><hr>
+      <button id="convertButton" class="visible">Convert</button>
+    </div>
+    <div id="result"></div>
+  </div>
+  <script>
+    function convertV3oToObj(v3oData) {
+      const lines = v3oData.trim().split('\n');
+      const vertices = [];
+      const normals = [];
+      const uvs = [];
+      const faces = [];
+
+      lines.forEach(line => {
+        const parts = line.split(',');
+
+        if (parts[0] === 'D') {
+          const x = -parseFloat(parts[2]);
+          const y = parseFloat(parts[1]);
+          const z = parseFloat(parts[3]);
+          vertices.push(`v ${x} ${y} ${z}`);
+
+          const nx = -parseFloat(parts[5]) / 256;
+          const ny = parseFloat(parts[4]) / 256;
+          const nz = parseFloat(parts[6]) / 256;
+          normals.push(`vn ${nx} ${ny} ${nz}`);
+
+          const u = parseFloat(parts[7]) / 1024;
+          const v = parseFloat(parts[8]) / 1024;
+          uvs.push(`vt ${u} ${1 - v}`);
+        } else if (parts[0] === 'P') {
+          const v1 = parseInt(parts[2]) - 1;
+          const v2 = parseInt(parts[3]) - 1;
+          const v3 = parseInt(parts[4]) - 1;
+          const t1 = parseInt(parts[9]) - 1;
+
+          faces.push(`f ${v1 + 1}/${t1 + 1}/${v1 + 1} ${v2 + 1}/${t1 + 1}/${v2 + 1} ${v3 + 1}/${t1 + 1}/${v3 + 1}`);
+        }
+      });
+
+      const objData = [...vertices, ...normals, ...uvs, ...faces].join('\n');
+      return objData;
+    }
+
+    function showConvertButton() {
+      const selectButton = document.getElementById('selectButton');
+      selectButton.style.display = 'none';
+
+      const convertButton = document.getElementById('convertButton');
+      convertButton.classList.add('visible');
+    }
+
+    document.getElementById('selectButton').addEventListener('click', function() {
+      const fileInput = document.getElementById('v3oFile');
+      fileInput.click();
+    });
+
+    document.getElementById('v3oFile').addEventListener('change', function() {
+      const fileInput = document.getElementById('v3oFile');
+      const file = fileInput.files[0];
+
+      if (file) {
+        showConvertButton();
+      }
+    });
+
+    document.getElementById('convertButton').addEventListener('click', function() {
+      const fileInput = document.getElementById('v3oFile');
+      const file = fileInput.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const v3oData = e.target.result;
+          const objData = convertV3oToObj(v3oData);
+
+          const blob = new Blob([objData], {type: 'text/plain'});
+
+          const url = URL.createObjectURL(blob);
+
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'converted.obj';
+          link.click();
+
+          URL.revokeObjectURL(url);
+
+          const resultDiv = document.getElementById('result');
+          resultDiv.textContent = objData;
+        };
+
+        reader.readAsText(file);
+      }
+    });
+  </script>
+</body>
+</html>
